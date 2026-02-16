@@ -20,10 +20,10 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://indekost.my.id',
-        'https://owner.indekost.my.id',
-        'http://indekost.test',
-        'http://owner.indekost.test',
+        'https://indekost.ozanqs.my.id',
+        'https://owner.indekost.ozanqs.my.id',
+        'http://indekost.ozanqs.my.id',
+        'http://owner.indekost.ozanqs.my.id',
         'http://localhost:8000',
         'http://localhost:3000', // For development frontend
     ],
