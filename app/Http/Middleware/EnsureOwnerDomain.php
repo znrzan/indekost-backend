@@ -15,11 +15,20 @@ class EnsureOwnerDomain
     {
         $host = $request->getHost();
         $ownerDomain = config('app.owner_domain');
+        $apiDomain = parse_url(config('app.url'), PHP_URL_HOST);
         
-        // Check if accessing from owner domain (owner-indekost.ozanqs.my.id)
+        // Allow if accessing via API domain (Central API Architecture)
+        if ($host === $apiDomain) {
+            return $next($request);
+        }
+
+        // Check if accessing from owner domain (Legacy/Direct)
         if ($host !== $ownerDomain && !str_contains($host, 'owner-indekost') && !str_starts_with($host, 'owner.')) {
             return response()->json([
                 'message' => 'Akses ditolak. Endpoint ini hanya untuk Owner.',
+                'current_domain' => $host,
+                'expected_domain' => $ownerDomain,
+                'api_domain' => $apiDomain,
             ], 403);
         }
 
