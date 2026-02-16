@@ -54,6 +54,20 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Multi-Domain Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'admin_url' => env('ADMIN_URL', 'http://localhost:3002'),
+    'owner_url' => env('OWNER_URL', 'http://localhost:3001'),
+    'tenant_url' => env('TENANT_URL', 'http://localhost:3000'),
+
+    'admin_domain' => parse_url(env('ADMIN_URL', 'http://localhost:3002'), PHP_URL_HOST),
+    'owner_domain' => parse_url(env('OWNER_URL', 'http://localhost:3001'), PHP_URL_HOST),
+    'tenant_domain' => parse_url(env('TENANT_URL', 'http://localhost:3000'), PHP_URL_HOST),
+
     'owner_url' => env('OWNER_URL', env('APP_URL', 'http://localhost')),
     
     'tenant_url' => env('TENANT_URL', env('APP_URL', 'http://localhost')),

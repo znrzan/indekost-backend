@@ -96,7 +96,8 @@ class Payment extends Model
     }
 
     /**
-     * Get the full URL for the payment proof from S3/MinIO.
+     * Get the full URL for the payment proof.
+     * Uses Laravel proxy route for client-side access to MinIO files.
      */
     public function getProofUrlAttribute(): ?string
     {
@@ -104,7 +105,8 @@ class Payment extends Model
             return null;
         }
 
-        return \Storage::disk('s3')->url($this->proof_of_payment);
+        // Use Laravel proxy route instead of direct MinIO URL
+        return url('/api/storage/' . $this->proof_of_payment);
     }
 
     /**

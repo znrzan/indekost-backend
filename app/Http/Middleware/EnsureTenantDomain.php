@@ -14,9 +14,10 @@ class EnsureTenantDomain
     public function handle(Request $request, Closure $next): Response
     {
         $host = $request->getHost();
+        $tenantDomain = config('app.tenant_domain');
         
-        // Reject if trying to access from owner subdomain
-        if (str_starts_with($host, 'owner.')) {
+        // Reject if trying to access from owner or admin subdomain
+        if (str_contains($host, 'owner-indekost') || str_contains($host, 'admin-indekost') || str_starts_with($host, 'owner.') || str_starts_with($host, 'admin.')) {
             return response()->json([
                 'message' => 'Akses ditolak. Endpoint ini untuk Tenant/Public.',
             ], 403);

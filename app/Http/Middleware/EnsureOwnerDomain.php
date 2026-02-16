@@ -14,9 +14,10 @@ class EnsureOwnerDomain
     public function handle(Request $request, Closure $next): Response
     {
         $host = $request->getHost();
+        $ownerDomain = config('app.owner_domain');
         
-        // Check if accessing from owner subdomain
-        if (!str_starts_with($host, 'owner.')) {
+        // Check if accessing from owner domain (owner-indekost.ozanqs.my.id)
+        if ($host !== $ownerDomain && !str_contains($host, 'owner-indekost') && !str_starts_with($host, 'owner.')) {
             return response()->json([
                 'message' => 'Akses ditolak. Endpoint ini hanya untuk Owner.',
             ], 403);

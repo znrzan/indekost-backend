@@ -85,6 +85,19 @@ Route::middleware('ensure.tenant.domain')->group(function () {
 });
 
 // ============================================================================
+// Public Storage Proxy (MinIO → Laravel → Client)
+// ============================================================================
+
+// Serve MinIO files through Laravel proxy for client-side access
+Route::get('/storage/{path}', [\App\Http\Controllers\StorageController::class, 'show'])
+    ->where('path', '.*')
+    ->name('storage.show');
+
+Route::get('/storage-download/{path}', [\App\Http\Controllers\StorageController::class, 'download'])
+    ->where('path', '.*')
+    ->name('storage.download');
+
+// ============================================================================
 // Development/Testing Routes (No domain restriction)
 // ============================================================================
 

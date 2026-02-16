@@ -108,7 +108,8 @@ class Ticket extends Model
     }
 
     /**
-     * Get the full URL for the ticket photo from S3/MinIO.
+     * Get the full URL for the ticket photo.
+     * Uses Laravel proxy route for client-side access to MinIO files.
      */
     public function getPhotoUrlAttribute(): ?string
     {
@@ -116,7 +117,8 @@ class Ticket extends Model
             return null;
         }
 
-        return \Storage::disk('s3')->url($this->photo_path);
+        // Use Laravel proxy route instead of direct MinIO URL
+        return url('/api/storage/' . $this->photo_path);
     }
 
     /**

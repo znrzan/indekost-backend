@@ -20,12 +20,14 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://indekost.ozanqs.my.id',
-        'https://owner.indekost.ozanqs.my.id',
-        'http://indekost.ozanqs.my.id',
-        'http://owner.indekost.ozanqs.my.id',
+        'https://indekost.ozanqs.my.id',        // Tenant frontend
+        'https://owner-indekost.ozanqs.my.id',  // Owner frontend
+        'https://admin-indekost.ozanqs.my.id',  // Admin frontend
+        'https://api-indekost.ozanqs.my.id',    // API (for CORS preflight)
         'http://localhost:8000',
-        'http://localhost:3000', // For development frontend
+        'http://localhost:3000', // Dev: Tenant
+        'http://localhost:3001', // Dev: Owner
+        'http://localhost:3002', // Dev: Admin
     ],
 
     'allowed_origins_patterns' => [],
