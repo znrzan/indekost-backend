@@ -4,9 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class Store
-
-MeterRequest extends FormRequest
+class StoreMeterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

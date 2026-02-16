@@ -8,50 +8,89 @@ use Exception;
 
 class WhatsAppService
 {
-    protected string $gatewayUrl;
-    protected string $apiKey;
+    protected string $baseUrl;
+    protected string $session;
+    protected ?string $apiKey;
 
     public function __construct()
     {
-        $this->gatewayUrl = config('services.whatsapp.gateway_url');
-        $this->apiKey = config('services.whatsapp.api_key');
+        $this->baseUrl = config('services.waha.base_url', 'http://localhost:3000');
+        $this->session = config('services.waha.session', 'default');
+        $this->apiKey = config('services.waha.api_key');
     }
 
     /**
-     * Send WhatsApp notification to a phone number.
+     * Get WAHA session status.
+     */
+    public function getSessionStatus(): ?array
+    {
+        try {
+            $url = "{$this->baseUrl}/api/sessions/{$this->session}";
+            
+            $response = Http::timeout(5)->get($url);
+            
+            if ($response->successful()) {
+                return $response->json();
+            }
+            
+            return null;
+        } catch (Exception $e) {
+            Log::error('Failed to get WAHA session status', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Check if WAHA session is ready.
+     */
+    public function isSessionReady(): bool
+    {
+        $status = $this->getSessionStatus();
+        return $status && ($status['status'] ?? '') === 'WORKING';
+    }
+
+    /**
+     * Send WhatsApp text message via WAHA.
      *
-     * @param string $to WhatsApp number (format: 628xxx)
+     * @param string $to WhatsApp number in format 628xxx
      * @param string $message Message content
      * @return bool Success status
      */
     public function sendNotification(string $to, string $message): bool
     {
         try {
-            // Ensure number is in correct format (628xxx)
-            $to = $this->formatPhoneNumber($to);
+            // Format chatId for WAHA (628xxx@c.us)
+            $chatId = $this->formatChatId($to);
 
-            Log::info('Sending WhatsApp notification', [
-                'to' => $to,
+            Log::info('Sending WhatsApp notification via WAHA', [
+                'to' => $chatId,
                 'message' => $message,
             ]);
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->post($this->gatewayUrl, [
-                'to' => $to,
-                'message' => $message,
+            $url = "{$this->baseUrl}/api/sendText";
+            
+            $headers = ['Content-Type' => 'application/json'];
+            if ($this->apiKey) {
+                $headers['X-Api-Key'] = $this->apiKey;
+            }
+
+            $response = Http::withHeaders($headers)->post($url, [
+                'session' => $this->session,
+                'chatId' => $chatId,
+                'text' => $message,
             ]);
 
             if ($response->successful()) {
                 Log::info('WhatsApp notification sent successfully', [
-                    'to' => $to,
+                    'to' => $chatId,
                     'response' => $response->json(),
                 ]);
                 return true;
             } else {
                 Log::error('WhatsApp notification failed', [
-                    'to' => $to,
+                    'to' => $chatId,
                     'status' => $response->status(),
                     'response' => $response->body(),
                 ]);
@@ -67,12 +106,12 @@ class WhatsAppService
     }
 
     /**
-     * Format phone number to Indonesia WhatsApp format (628xxx).
+     * Format phone number to WAHA chatId format (628xxx@c.us).
      *
      * @param string $number Phone number
-     * @return string Formatted number
+     * @return string Formatted chatId
      */
-    protected function formatPhoneNumber(string $number): string
+    protected function formatChatId(string $number): string
     {
         // Remove any spaces, dashes, or special characters
         $number = preg_replace('/[^0-9]/', '', $number);
@@ -87,7 +126,8 @@ class WhatsAppService
             $number = '62' . $number;
         }
 
-        return $number;
+        // Add @c.us suffix for WAHA
+        return $number . '@c.us';
     }
 
     /**
