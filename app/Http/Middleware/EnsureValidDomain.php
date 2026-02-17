@@ -19,6 +19,17 @@ class EnsureValidDomain
         $currentHost = $request->getHost();
         $ownerDomain = config('app.owner_domain');
         $tenantDomain = config('app.tenant_domain');
+        $apiDomain = parse_url(config('app.url'), PHP_URL_HOST);
+
+        // 1. Bypass check if accessing via Central API Domain (Zero Trust Architecture)
+        if ($currentHost === $apiDomain) {
+            return $next($request);
+        }
+
+        // 2. Bypass for local testing (optional, remove in production)
+        if ($currentHost === 'localhost' || str_contains($currentHost, '127.0.0.1')) {
+            return $next($request);
+        }
 
         // Check if accessing owner endpoints from correct domain
         if ($this->isOwnerEndpoint($request)) {
