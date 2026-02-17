@@ -22,8 +22,19 @@ class Tenant extends Model
         'room_id',
         'name',
         'whatsapp_number',
+        'password',
         'entry_date',
         'status',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     /**

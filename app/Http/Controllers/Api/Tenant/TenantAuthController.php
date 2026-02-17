@@ -12,27 +12,36 @@ use Illuminate\Validation\ValidationException;
 class TenantAuthController extends Controller
 {
     /**
-     * Tenant login using WhatsApp number + simple PIN/identifier.
-     * 
-     * For simplicity, we'll use tenant_id + whatsapp_number as credentials.
-     * In production, you might want to add a PIN field or use OTP.
+     * Tenant login using WhatsApp number + Password.
      */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'tenant_id' => ['required', 'exists:tenants,id'],
             'whatsapp_number' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ]);
 
-        $tenant = Tenant::find($request->tenant_id);
-
-        // Verify whatsapp number matches
+        // Normalize WhatsApp number (remove non-digits)
         $inputWA = preg_replace('/[^0-9]/', '', $request->whatsapp_number);
-        $tenantWA = preg_replace('/[^0-9]/', '', $tenant->whatsapp_number);
+        
+        // Find tenant by WA number (handling potential format differences)
+        // We'll search for exact match or formatted match if needed.
+        // For now, let's assume stored numbers are clean or we clean them for search.
+        // Best approach: Store clean numbers. But let's try to find one.
+        
+        $tenant = Tenant::where('whatsapp_number', $inputWA)
+            ->orWhere('whatsapp_number', 'LIKE', "%$inputWA")
+            ->first();
 
-        if ($inputWA !== $tenantWA) {
+        if (! $tenant || ! Hash::check($request->password, $tenant->password)) {
             throw ValidationException::withMessages([
-                'whatsapp_number' => ['Nomor WhatsApp tidak sesuai.'],
+                'whatsapp_number' => ['Kombinasi WhatsApp dan Password tidak sesuai.'],
+            ]);
+        }
+
+        if ($tenant->status !== 'active') {
+            throw ValidationException::withMessages([
+                'whatsapp_number' => ['Akun tenant tidak aktif.'],
             ]);
         }
 
@@ -45,7 +54,7 @@ class TenantAuthController extends Controller
                 'tenant' => [
                     'id' => $tenant->id,
                     'name' => $tenant->name,
-                    'room_number' => $tenant->room->room_number,
+                    'room_number' => $tenant->room->room_number ?? 'N/A',
                 ],
                 'token' => $token,
                 'type' => 'tenant',
